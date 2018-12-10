@@ -37,6 +37,10 @@ CREATE TABLE BillOfMaterials (
 )
 GO
 
+CREATE INDEX idx_bom
+ON BillOfMaterials (ProductAssemblyID, ComponentID);
+GO
+
 CREATE TABLE Address (
 	AddressID int IDENTITY(1,1) not null PRIMARY KEY,
 	StreetAddress varchar(50) not null,
@@ -64,6 +68,10 @@ CREATE TABLE Credit (
 )
 GO
 
+CREATE INDEX idx_accnum
+ON Credit (AccountNumber);
+GO
+
 CREATE TABLE Customer (
 	CustomerID int IDENTITY(1,1) not null PRIMARY KEY,
 	CustomerName varchar(50) not null,
@@ -85,14 +93,23 @@ CREATE TABLE CustomerOrders (
 )
 GO
 
+CREATE INDEX idx_custid
+ON CustomerOrders (CustomerID);
+GO
+
 CREATE TABLE VendorOrders (
 	OrderID int IDENTITY(1,1) not null PRIMARY KEY,
+	VendorID int not null FOREIGN KEY REFERENCES Vendors(VendorID),
 	ProductID int not null FOREIGN KEY REFERENCES Parts(PartID),
 	QuantityOrdered int not null,
 	QuantityReceived int not null,
 	OrderDate date not null,
 	OrderStatus varchar(50) not null
 )
+GO
+
+CREATE INDEX idx_venid
+ON VendorOrders (VendorID);
 GO
 
 CREATE TABLE JobOrders (
