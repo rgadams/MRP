@@ -12,12 +12,38 @@ GO
 USE MRP
 GO
 
+CREATE TABLE Address (
+	AddressID int IDENTITY(1,1) not null PRIMARY KEY,
+	StreetAddress varchar(50) not null,
+	City varchar(50) not null,
+	State varchar(50) not null,
+	Country varchar(50) not null,
+	PostalCode varchar(10) not null
+)
+GO
+
+CREATE TABLE Vendors (
+	VendorID int IDENTITY(1,1) not null PRIMARY KEY,
+	VendorName varchar(50) not null,
+	ContactPerson varchar(50) null,
+	PhoneNumber varchar(50) null,
+	VendorAddressID int not null FOREIGN KEY REFERENCES Address(AddressID),
+	VendorRating varchar(5) not null --DEFAULT 'A' 
+)
+GO
+
 CREATE TABLE Parts (
 	PartID int IDENTITY(1,1) not null PRIMARY KEY,
 	PartName varchar(50) not null,
 	PartDescription varchar(200) null,
 	PartType varchar(50) not null,
-	PartCost money not null
+	PartCost money not null,
+	VendorID int null FOREIGN KEY REFERENCES Vendors(VendorID),
+	EconomicOrderQty int null,
+	SafetyStock int null,
+	OnHandMax int null,
+	OrderLeadTime int null,
+	PartIllustration varbinary(max) null
 )
 GO
 
@@ -39,26 +65,6 @@ GO
 
 CREATE INDEX idx_bom
 ON BillOfMaterials (ProductAssemblyID, ComponentID);
-GO
-
-CREATE TABLE Address (
-	AddressID int IDENTITY(1,1) not null PRIMARY KEY,
-	StreetAddress varchar(50) not null,
-	City varchar(50) not null,
-	State varchar(50) not null,
-	Country varchar(50) not null,
-	PostalCode varchar(10) not null
-)
-GO
-
-CREATE TABLE Vendors (
-	VendorID int IDENTITY(1,1) not null PRIMARY KEY,
-	VendorName varchar(50) not null,
-	ContactPerson varchar(50) null,
-	PhoneNumber varchar(50) null,
-	VendorAddressID int not null FOREIGN KEY REFERENCES Address(AddressID),
-	VendorRating varchar(5) not null --DEFAULT 'A' 
-)
 GO
 
 CREATE TABLE Credit (
@@ -131,3 +137,85 @@ CREATE TABLE Inventory (
 	Quantity int not null
 )
 GO
+
+CREATE OR ALTER PROCEDURE spInsertVendor
+	@vendorName varchar(50),
+	@vendorContact varchar(50),
+	@vendorPhoneNumber varchar(50),
+	@vendorAddressID int,
+	@vendorRating varchar(5)
+AS
+BEGIN
+	INSERT INTO Vendors (VendorName, ContactPerson, PhoneNumber, VendorAddressID, VendorRating)
+	VALUES (@vendorName, @vendorContact, @vendorPhoneNumber, @vendorAddressID, @vendorRating)
+END
+GO
+
+CREATE OR ALTER PROCEDURE spInsertAddress
+	@streetAddress varchar(50),
+	@city varchar(50),
+	@state varchar(50),
+	@country varchar(50),
+	@postalCode varchar(10)
+AS
+BEGIN
+	INSERT INTO Address (StreetAddress, City, State, Country, PostalCode)
+	VALUES (@streetAddress, @city, @state, @country, @postalCode)
+END
+GO
+
+CREATE OR ALTER PROCEDURE spChangePartVendor
+	@partID int,
+	@vendorID int
+AS
+BEGIN
+	UPDATE Parts
+	SET VendorID = @vendorID
+	WHERE PartID = @partID
+END
+GO
+
+-- TESTS
+/*
+INSERT INTO Address
+VALUES ('22 Main Street', 'New York', 'New York', 'USA', '44444')
+
+EXEC spInsertAddress '23 Burton Street', 'Denver', 'Colorado', 'USA', '12345'
+
+INSERT INTO Vendors
+VALUES ('Vendor0', 'Phil Collins', '232-232-2323', (SELECT AddressID FROM Address WHERE PostalCode = '44444'), 'A')
+
+DECLARE @addr int
+SET @addr = (SELECT AddressID FROM Address WHERE PostalCode = '12345')
+
+EXEC spInsertVendor 'Vendor1', 'Joe Bob', '343-343-3434', @addr, 'AA'
+
+SELECT * FROM Address
+
+SELECT * FROM Vendors
+INNER JOIN Address 
+	ON Vendors.VendorAddressID = Address.AddressID
+
+DECLARE @vndr1 int
+SET @vndr1 = (SELECT VendorID FROM Vendors WHERE VendorName = 'Vendor0')
+
+DECLARE @vndr2 int
+SET @vndr2 = (SELECT VendorID FROM Vendors WHERE VendorName = 'Vendor1')
+
+INSERT INTO Parts (PartName, PartDescription, PartType, PartCost, VendorID)
+VALUES ('Part1', 'Desc1', 1, 2.3, @vndr1)
+
+DECLARE @prt int
+SET @prt = (SELECT PartID FROM Parts)
+
+SELECT * FROM Parts
+
+EXEC spChangePartVendor @prt, @vndr2
+
+SELECT * FROM Parts
+
+DELETE FROM Parts
+DELETE FROM Vendors
+DELETE FROM Address
+
+*/
