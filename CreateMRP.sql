@@ -196,39 +196,74 @@ INSERT INTO Inventory(ProductID,InventoryLane,InventoryRow,InventoryBin,Quantity
 GO
 
 CREATE OR ALTER PROCEDURE spInsertVendor
-	@vendorName varchar(50),
-	@vendorContact varchar(50),
-	@vendorPhoneNumber varchar(50),
-	@vendorAddressID int,
-	@vendorRating varchar(5)
+	@VendorName varchar(50),
+	@ContactPerson varchar(50),
+	@PhoneNumber varchar(50),
+	@VendorAddressID int,
+	@VendorRating varchar(5)
 AS
 BEGIN
 	INSERT INTO Vendors (VendorName, ContactPerson, PhoneNumber, VendorAddressID, VendorRating)
-	VALUES (@vendorName, @vendorContact, @vendorPhoneNumber, @vendorAddressID, @vendorRating)
+	VALUES (@VendorName, @ContactPerson, @PhoneNumber, @VendorAddressID, @VendorRating)
 END
 GO
 
 CREATE OR ALTER PROCEDURE spInsertAddress
-	@streetAddress varchar(50),
-	@city varchar(50),
-	@state varchar(50),
-	@country varchar(50),
-	@postalCode varchar(10)
+	@StreetAddress varchar(50),
+	@City varchar(50),
+	@State varchar(50),
+	@Country varchar(50),
+	@PostalCode varchar(10)
 AS
 BEGIN
 	INSERT INTO Address (StreetAddress, City, State, Country, PostalCode)
-	VALUES (@streetAddress, @city, @state, @country, @postalCode)
+	VALUES (@StreetAddress, @City, @State, @Country, @PostalCode)
 END
 GO
 
 CREATE OR ALTER PROCEDURE spChangePartVendor
-	@partID int,
-	@vendorID int
+	@PartID int,
+	@VendorID int
 AS
 BEGIN
 	UPDATE Parts
 	SET VendorID = @vendorID
 	WHERE PartID = @partID
+END
+GO
+
+CREATE OR ALTER PROCEDURE spSelectAddressID
+	@StreetAddress varchar(50),
+	@City varchar(50),
+	@State varchar(50),
+	@Country varchar(50),
+	@PostalCode varchar(10)
+AS
+BEGIN
+	select AddressID from address
+	where StreetAddress = @StreetAddress and City = @City 
+		and State = @State and Country = @Country and PostalCode = @PostalCode
+END
+GO
+
+CREATE OR ALTER PROCEDURE spSelectVendorID
+	@VendorName varchar(50),
+	@ContactPerson varchar(50),
+	@PhoneNumber varchar(50),
+	@VendorAddressID varchar(50),
+	@VendorRating varchar(10)
+AS
+BEGIN
+	select VendorID from Vendors
+	where VendorName = @VendorName and ContactPerson = @ContactPerson 
+		and PhoneNumber = @PhoneNumber and VendorAddressID = @VendorAddressID and VendorRating = @VendorRating
+END
+GO
+
+CREATE OR ALTER PROCEDURE spSelectParts
+AS
+BEGIN
+	select PartID, PartName from Parts
 END
 GO
 
@@ -263,6 +298,8 @@ SELECT * FROM JobOrders
 SELECT * FROM Inventory
 */
 
--- use master
+/*
+use master
 DROP DATABASE MRP
+*/
 
